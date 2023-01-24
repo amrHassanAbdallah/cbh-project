@@ -12,3 +12,9 @@ You will be graded on the exhaustiveness and quality of your unit tests, the dep
 * started by adding the test cases
   * Test cases could be refactored to array of test cases with a for loop over them to execute and compare results
 * Refactored the hashing function to be reused in different places and to have params for the algorithm and encoding in case we decided to change it later.
+* Added a strategy pattern over the event key candidate to encapsulate the logic as well as allowing further modifications in the future as the event might grow to have other fields and rules.
+* Could do the same strategy pattern with the rest of the logic (type enforcement, length) but I believe it would complicate it more so leaving it at that.
+### Further improvements
+* Add code sonar or something similar
+* Add lint rules to enforce format and some rules
+* Add CI pipeline to run the tests and allow to merge only when the CI passes
