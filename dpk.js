@@ -1,44 +1,24 @@
 const crypto = require("crypto");
 
-const getDataHash = (data, algorithm = "sha3-512" , encoding = "hex") => {
-  return crypto.createHash("sha3-512").update(data).digest("hex")
-}
-const eventKey = (event) =>{
-  return  event.partitionKey
-}
-const eventData = (event) =>{
-  const data = JSON.stringify(event)
-  return getDataHash(data)
-}
-const EventCandidateGenerator = function (){
-  this.execute = (event) =>{
-    let handler;
-    if (event.partitionKey){
-      handler = eventKey
-    }else{
-      handler = eventData
-    }
-    return handler(event)
-  }
-}
+const createHash = (data) => crypto.createHash("sha3-512").update(data).digest("hex");
+const getEventData = (event) => JSON.stringify(event);
+
+const getEventPartitionKey = (event) => event && event.partitionKey;
+const getEventDataHash = (event) => createHash(getEventData(event));
+
+const getEventPartitionKeyOrDataHash = (event) => getEventPartitionKey(event) || getEventDataHash(event);
+
+const MAX_PARTITION_KEY_LENGTH = 256;
+const TRIVIAL_PARTITION_KEY = "0";
+
 
 const deterministicPartitionKey = (event) => {
-  const MAX_PARTITION_KEY_LENGTH = 256;
-  let candidate = "0";
+  let partitionKeyCandidate = getEventPartitionKeyOrDataHash(event) || TRIVIAL_PARTITION_KEY;
 
-  if (event) {
-    const eventCandidateGenerator = new EventCandidateGenerator()
-    candidate = eventCandidateGenerator.execute(event)
+  if (partitionKeyCandidate.length > MAX_PARTITION_KEY_LENGTH) {
+    partitionKeyCandidate = createHash(partitionKeyCandidate);
   }
-
-  if (typeof candidate !== "string") {
-    candidate = JSON.stringify(candidate);
-  }
-
-  if (candidate.length > MAX_PARTITION_KEY_LENGTH) {
-    candidate = getDataHash(candidate);
-  }
-  return candidate;
+  return partitionKeyCandidate;
 };
 
 module.exports = {
